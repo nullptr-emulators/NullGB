@@ -1,9 +1,7 @@
-﻿namespace NullGB.Core
+﻿namespace NullGB.Core;
+
+internal interface IBus
 {
-    // TODO: Implement
-    internal interface IBus
-    {
-        public byte Read(ushort address);
-        public void Write(ushort address, byte value);
-    }
+    public byte Read(ushort address);
+    public void Write(ushort address, byte value);
 }

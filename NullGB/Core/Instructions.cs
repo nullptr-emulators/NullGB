@@ -1,11 +1,10 @@
-﻿namespace NullGB.Core
+﻿namespace NullGB.Core;
+
+internal partial class CPU
 {
-    internal partial class CPU
+    public string JumpImmediate()
     {
-        public string JumpImmediate()
-        {
-            PC = (ushort)((_memoryBus.Read(PC++) << 8) | _memoryBus.Read(PC++));
-            return "Yump";
-        }
+        PC = (ushort)((_memoryBus.Read(PC++) << 8) | _memoryBus.Read(PC++));
+        return "Yump";
     }
 }
