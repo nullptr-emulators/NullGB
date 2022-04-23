@@ -14,5 +14,17 @@ internal class MMU : IBus
 
     public byte Read(ushort address) => Memory[address];
 
-    public byte Write(ushort address, byte value) => Memory[address] = value;
+    public byte Write(ushort address, byte value)
+    {
+        if (address == 0xFF02 && value == 0x81)
+        {
+            Console.Error.Write((char)Memory[0xFF01]);
+        }
+
+        if (address < 0x8000)
+        {
+            return value;
+        }
+        return Memory[address] = value;
+    }
 }

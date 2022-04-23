@@ -12,7 +12,7 @@ public class Program
 
     public static void RunSpecialTest()
     {
-        byte[] SpecialTestROM = File.ReadAllBytes(@"..\..\..\..\TestRoms\cpu_instrs\individual\01-special.gb");
+        byte[] SpecialTestROM = File.ReadAllBytes(@"..\..\..\..\TestRoms\cpu_instrs\individual\09-op r,r.gb");
         MMU mmu = new(SpecialTestROM);
         CPU cpu = new(mmu);
         cpu.Start();

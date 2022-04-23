@@ -162,7 +162,25 @@ internal partial class CPU
         // TODO: Move main loop out of CPU
         while (true)
         {
-            Step();
+            switch (Step())
+            {
+                case Status.Halt:
+                    Console.WriteLine("Halting");
+                    Console.ReadLine();
+                    break;
+                case Status.Stop:
+                    Console.WriteLine("Stopping");
+                    Environment.Exit(0);
+                    break;
+                case Status.InvalidInstr:
+                    Console.WriteLine("Invalid Instruction");
+                    Environment.Exit(0);
+                    break;
+                case Status.Jump:
+                case Status.Continue:
+                    //Console.ReadLine();
+                    break;
+            }
         }
     }
 
@@ -171,18 +189,15 @@ internal partial class CPU
     /// </summary>
     public void Restart()
     {
-        A = 0;
-        B = 0;
-        C = 0;
-        D = 0;
-        E = 0;
-        H = 0;
-        L = 0;
+        A = 0x01;
+        B = 0x00;
+        C = 0x13;
+        D = 0x00;
+        E = 0xD8;
+        H = 0x01;
+        L = 0x4D;
 
-        FlagZ = false;
-        FlagN = false;
-        FlagH = false;
-        FlagC = false;
+        F = 0xB0;
 
         SP = 0xFFFE;
         PC = 0x100;
@@ -190,10 +205,10 @@ internal partial class CPU
 
     public void Push(ushort val)
     {
+        SP -= 1;
         MemoryBus.Write(SP, (byte)(val >> 8));
         SP -= 1;
         MemoryBus.Write(SP, (byte)(val & 0xFF));
-        SP -= 1;
     }
 
     public ushort Pop()

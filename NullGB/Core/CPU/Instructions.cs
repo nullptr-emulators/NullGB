@@ -210,7 +210,7 @@ internal static class Instructions
         new Instruction(Opcode: 0x00C8, Size: 1, BaseTime: 2, BranchTime: 5, Info: "RET Z"),
         new Instruction(Opcode: 0x00C9, Size: 1, BaseTime: 4, BranchTime: 4, Info: "RET"),
         new Instruction(Opcode: 0x00CA, Size: 3, BaseTime: 3, BranchTime: 4, Info: "JP Z,a16"),
-        new Instruction(Opcode: 0x00CB, Size: 1, BaseTime: 1, BranchTime: 1, Info: "PREFIX CB"),
+        new Instruction(Opcode: 0x00CB, Size: 2, BaseTime: 1, BranchTime: 1, Info: "PREFIX CB"),
         new Instruction(Opcode: 0x00CC, Size: 3, BaseTime: 3, BranchTime: 6, Info: "CALL Z,a16"),
         new Instruction(Opcode: 0x00CD, Size: 3, BaseTime: 6, BranchTime: 6, Info: "CALL a16"),
         new Instruction(Opcode: 0x00CE, Size: 2, BaseTime: 2, BranchTime: 2, Info: "ADC A,d8"),
@@ -520,7 +520,6 @@ internal static class Instructions
         new Instruction(Opcode: 0xCBFE, Size: 2, BaseTime: 4, BranchTime: 4, Info: "SET 7,(HL)"),
         new Instruction(Opcode: 0xCBFF, Size: 2, BaseTime: 2, BranchTime: 2, Info: "SET 7,A"),
     };
-
     #endregion
 
     #region JumpFuncs
@@ -773,6 +772,8 @@ internal static class Instructions
         cpu.FlagN = true;
         cpu.FlagH = (previous & 0x0F) is 0;
 
+        cpu.WriteRegister8(dest, (byte)result);
+
         return Status.Continue;
     }
 
@@ -793,8 +794,8 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -809,8 +810,8 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -821,13 +822,13 @@ internal static class Instructions
         ushort prevDest = cpu.A;
         ushort prevSrc = cpu.ReadRegister8(src);
 
-        int result = prevDest + prevSrc + (cpu.FlagC ? 1 : 0);
+        int carry = (cpu.FlagC ? 1 : 0);
+        int result = prevDest + prevSrc + carry;
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        // TODO: Actually check for half carry
-        cpu.FlagH = (result >> 4) is 1; 
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF) + carry) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -838,13 +839,13 @@ internal static class Instructions
         ushort prevDest = cpu.A;
         ushort prevSrc = cpu.Fetch8();
 
-        int result = prevDest + prevSrc + (cpu.FlagC ? 1 : 0);
+        int carry = (cpu.FlagC ? 1 : 0);
+        int result = prevDest + prevSrc + carry;
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        // TODO: Actually check for half carry
-        cpu.FlagH = (result >> 4) is 1;
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF) + carry) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -858,9 +859,8 @@ internal static class Instructions
         int result = prevDest + prevSrc;
 
         cpu.FlagN = false;
-        // TODO: Actually check for half carry
-        // cpu.FlagH;
-        cpu.FlagC = (result >> 16) is 1;
+        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 16) is not 0;
 
         cpu.WriteRegister16(src, (ushort)result);
         return Status.Continue;
@@ -874,9 +874,9 @@ internal static class Instructions
         int result = prevDest - prevSrc;
 
         cpu.FlagZ = (byte)result is 0;
-        cpu.FlagN = false;
-        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagN = true;
+        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -890,9 +890,9 @@ internal static class Instructions
         int result = prevDest - prevSrc;
 
         cpu.FlagZ = (byte)result is 0;
-        cpu.FlagN = false;
-        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagN = true;
+        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -903,12 +903,13 @@ internal static class Instructions
         byte prevDest = cpu.A;
         byte prevSrc = cpu.ReadRegister8(src);
 
-        int result = prevDest - prevSrc - (cpu.FlagC ? 1 : 0);
+        int carry = (cpu.FlagC ? 1 : 0);
+        int result = prevDest - prevSrc - carry;
 
         cpu.FlagZ = (byte)result is 0;
-        cpu.FlagN = false;
-        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagN = true;
+        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF) - carry) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -919,12 +920,13 @@ internal static class Instructions
         byte prevDest = cpu.A;
         byte prevSrc = cpu.Fetch8();
 
-        int result = prevDest - prevSrc - (cpu.FlagC ? 1 : 0);
+        int carry = (cpu.FlagC ? 1 : 0);
+        int result = prevDest - prevSrc - carry;
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
-        cpu.FlagC = (result >> 8) is 1;
+        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF) - carry) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
         return Status.Continue;
@@ -1028,28 +1030,30 @@ internal static class Instructions
 
     public static Status CompareReg8(REG8 src, CPU cpu)
     {
-        byte srcVal = cpu.ReadRegister8(src);
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.ReadRegister8(src);
 
-        int result = cpu.A - srcVal;
+        int result = prevDest - prevSrc;
 
-        cpu.FlagZ = result is 0;
+        cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (cpu.A & 0x0F) is 0;
-        cpu.FlagC = cpu.A < srcVal;
+        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         return Status.Continue;
     }
 
     public static Status CompareImmediate(CPU cpu)
     {
-        byte srcVal = cpu.Fetch8();
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.Fetch8();
 
-        int result = cpu.A - srcVal;
+        int result = prevDest - prevSrc;
 
-        cpu.FlagZ = result is 0;
+        cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (cpu.A & 0x0F) is 0;
-        cpu.FlagC = cpu.A < srcVal;
+        cpu.FlagH = (((prevDest & 0xf) - (prevSrc & 0xf)) & 0x10) is 0x10;
+        cpu.FlagC = (result >> 8) is not 0;
 
         return Status.Continue;
     }
@@ -1089,43 +1093,41 @@ internal static class Instructions
     
     public static Status RotateLeftA(CPU cpu)
     {
-        byte prev = cpu.A;
-        byte prevCarry = (byte)(cpu.FlagC ? 1 : 0);
-
-        cpu.A <<= 1;
-        cpu.A |= prevCarry;
-
-        cpu.FlagZ = cpu.A is 0;
-        cpu.FlagN = false;
-        cpu.FlagH = false;
-        cpu.FlagC = (prev >> 7) is 1;
-
+        CBRotateLeft(REG8.A, cpu);
+        cpu.FlagZ = false;
         return Status.Continue;
     }
 
     public static Status RotateLeftCarryA(CPU cpu)
     {
-        byte prev = cpu.A;
-
-        cpu.A <<= 1;
-        cpu.A |= (byte)(prev >> 7);
-
-        cpu.FlagZ = cpu.A is 0;
-        cpu.FlagN = false;
-        cpu.FlagH = false;
-        cpu.FlagC = (prev >> 7) is 1;
-
+        CBRotateLeftCarry(REG8.A, cpu);
+        cpu.FlagZ = false;
         return Status.Continue;
     }
 
     public static Status RotateRightA(CPU cpu)
     {
-        byte prev = (byte)(cpu.FlagC ? 1 : 0);
+        CBRotateRight(REG8.A, cpu);
+        cpu.FlagZ = false;
+        return Status.Continue;
+    }
 
-        cpu.A >>= 1;
-        cpu.A |= (byte)(prev << 7);
+    public static Status RotateRightCarryA(CPU cpu)
+    {
+        CBRotateRightCarry(REG8.A, cpu);
+        cpu.FlagZ = false;
+        return Status.Continue;
+    }
+    #endregion
 
-        cpu.FlagZ = cpu.A is 0;
+    #region CB
+    public static Status CBRotateLeft(REG8 register, CPU cpu)
+    {
+        byte prev = cpu.ReadRegister8(register);
+
+        byte result = cpu.WriteRegister8(register, (byte)((prev << 1) | (cpu.FlagC ? 1 : 0)));
+
+        cpu.FlagZ = result is 0;
         cpu.FlagN = false;
         cpu.FlagH = false;
         cpu.FlagC = (prev >> 7) is 1;
@@ -1133,17 +1135,132 @@ internal static class Instructions
         return Status.Continue;
     }
 
-    public static Status RotateRightCarryA(CPU cpu)
+    public static Status CBRotateLeftCarry(REG8 register, CPU cpu)
     {
-        byte prev = cpu.A;
+        byte prev = cpu.ReadRegister8(register);
 
-        cpu.A >>= 1;
-        cpu.A |= (byte)(prev & 0x80);
+        byte result = cpu.WriteRegister8(register, (byte)((prev << 1) | (prev >> 7)));
 
-        cpu.FlagZ = cpu.A is 0;
+        cpu.FlagZ = result is 0;
         cpu.FlagN = false;
         cpu.FlagH = false;
         cpu.FlagC = (prev >> 7) is 1;
+    
+        return Status.Continue;
+    }
+
+    public static Status CBRotateRight(REG8 register, CPU cpu)
+    {
+        byte prev = cpu.ReadRegister8(register);
+
+        byte result = cpu.WriteRegister8(register, (byte)((prev >> 1) | (cpu.FlagC ? 0x80 : 0)));
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev & 0x1) is 1;
+
+        return Status.Continue;
+    }
+
+    public static Status CBRotateRightCarry(REG8 register, CPU cpu)
+    {
+        byte prev = cpu.ReadRegister8(register);
+
+        byte result = cpu.WriteRegister8(register, (byte)((prev >> 1) | (prev << 7)));
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev & 0x1) is 1;
+        return Status.Continue;
+    }
+
+    public static Status CBShiftLeftArithmetic(REG8 register, CPU cpu)
+    {
+        byte prev = cpu.ReadRegister8(register);
+        byte result = (byte)(prev << 1);
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev >> 7) is 1;
+
+        cpu.WriteRegister8(register, result);
+
+        return Status.Continue;
+    }
+
+    public static Status CBShiftRightArithmetic(REG8 register, CPU cpu)
+    {
+        sbyte prev = (sbyte)cpu.ReadRegister8(register);
+        byte result = (byte)(prev >> 1);
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev & 0x1) is 1;
+
+        cpu.WriteRegister8(register, result);
+
+        return Status.Continue;
+    }
+
+    public static Status CBShiftRightLogical(REG8 register, CPU cpu)
+    {
+        byte prev = cpu.ReadRegister8(register);
+        byte result = (byte)(prev >> 1);
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev & 0x1) is 1;
+
+        cpu.WriteRegister8(register, result);
+
+        return Status.Continue;
+    }
+
+    public static Status CBSwap(REG8 register, CPU cpu)
+    {
+        byte value = cpu.ReadRegister8(register);
+        byte lower = (byte)(value >> 4);
+        byte upper = (byte)((value & 0x0F) << 4);
+        byte result = cpu.WriteRegister8(register, (byte)(upper | lower));
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = false;
+
+        return Status.Continue;
+    }
+
+    public static Status CBBit(REG8 register, int offset, CPU cpu)
+    {
+        byte value = cpu.ReadRegister8(register);
+        byte tBit = (byte)(value & (1 << offset));
+
+        cpu.FlagZ = tBit is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = true;
+
+        return Status.Continue;
+    }
+
+    public static Status CBReset(REG8 register, int offset, CPU cpu)
+    {
+        byte value = cpu.ReadRegister8(register);
+        value &= (byte)~(1 << offset);
+        cpu.WriteRegister8(register, value);
+        return Status.Continue;
+    }
+
+    public static Status CBSet(REG8 register, int offset, CPU cpu)
+    {
+        byte value = cpu.ReadRegister8(register);
+        value |= (byte)(1 << offset);
+        cpu.WriteRegister8(register, value);
         return Status.Continue;
     }
     #endregion
