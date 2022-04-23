@@ -1,4 +1,5 @@
 ﻿using NullGB.Core;
+using NullGB.Core.CPU;
 
 namespace NullGB;
 
