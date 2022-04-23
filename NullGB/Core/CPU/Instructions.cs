@@ -521,157 +521,7 @@ internal static class Instructions
         new Instruction(Opcode: 0xCBFF, Size: 2, BaseTime: 2, BranchTime: 2, Info: "SET 7,A"),
     };
 
-    public static readonly List<Func<CPU, IBus, Status>> InstrFunctions = new()
-    {
-        #region Invalid Addresses
-        [0x00D3] = CPUCrash,
-        [0x00DB] = CPUCrash,
-        [0x00DD] = CPUCrash,
-        [0x00E3] = CPUCrash,
-        [0x00E4] = CPUCrash,
-        [0x00EB] = CPUCrash,
-        [0x00EC] = CPUCrash,
-        [0x00ED] = CPUCrash,
-        [0x00F4] = CPUCrash,
-        [0x00FC] = CPUCrash,
-        [0x00FD] = CPUCrash,
-        #endregion
-
-        #region Jumps
-        [0x000C3] = (cpu, _) => JumpAbsIf(cpu, true),
-        [0x000C2] = (cpu, _) => JumpAbsIf(cpu, !cpu.FlagZ),
-        [0x000CA] = (cpu, _) => JumpAbsIf(cpu, cpu.FlagZ),
-        [0x000D2] = (cpu, _) => JumpAbsIf(cpu, !cpu.FlagC),
-        [0x000DA] = (cpu, _) => JumpAbsIf(cpu, cpu.FlagC),
-
-        [0x00018] = (cpu, _) => JumpRelIf(cpu, true),
-        [0x00020] = (cpu, _) => JumpRelIf(cpu, !cpu.FlagZ),
-        [0x00028] = (cpu, _) => JumpRelIf(cpu, cpu.FlagZ),
-        [0x00030] = (cpu, _) => JumpRelIf(cpu, !cpu.FlagC),
-        [0x00038] = (cpu, _) => JumpRelIf(cpu, cpu.FlagC),
-
-        [0x00E9] = JumpHL,
-
-        [0x00C9] = (cpu, _) => RetIf(cpu, true),
-        [0x00D9] = ReturnInterrupt,
-        [0x00C0] = (cpu, _) => RetIf(cpu, !cpu.FlagZ),
-        [0x00C8] = (cpu, _) => RetIf(cpu, cpu.FlagZ),
-        [0x00D0] = (cpu, _) => RetIf(cpu, !cpu.FlagC),
-        [0x00D8] = (cpu, _) => RetIf(cpu, cpu.FlagC),
-
-        [0x00CD] = (cpu, _) => CallIf(cpu, true),
-        [0x00C4] = (cpu, _) => CallIf(cpu, !cpu.FlagZ),
-        [0x00CC] = (cpu, _) => CallIf(cpu, cpu.FlagZ),
-        [0x00D4] = (cpu, _) => CallIf(cpu, !cpu.FlagC),
-        [0x00DC] = (cpu, _) => CallIf(cpu, cpu.FlagC),
-
-        [0x00C7] = (cpu, _) => Reset(cpu, 0 << 3),
-        [0x00D7] = (cpu, _) => Reset(cpu, 1 << 3),
-        [0x00E7] = (cpu, _) => Reset(cpu, 2 << 3),
-        [0x00F7] = (cpu, _) => Reset(cpu, 3 << 3),
-        [0x00CF] = (cpu, _) => Reset(cpu, 4 << 3),
-        [0x00DF] = (cpu, _) => Reset(cpu, 5 << 3),
-        [0x00EF] = (cpu, _) => Reset(cpu, 6 << 3),
-        [0x00FF] = (cpu, _) => Reset(cpu, 7 << 3),
-        #endregion
-
-        #region Stack Operations
-        [0x00C1] = (cpu, _) => PopRegister(cpu, REG16.BC),
-        [0x00D1] = (cpu, _) => PopRegister(cpu, REG16.DE),
-        [0x00E1] = (cpu, _) => PopRegister(cpu, REG16.HL),
-        [0x00F1] = (cpu, _) => PopRegister(cpu, REG16.AF),
-
-        [0x00C5] = (cpu, _) => PushRegister(cpu, REG16.BC),
-        [0x00D5] = (cpu, _) => PushRegister(cpu, REG16.DE),
-        [0x00E5] = (cpu, _) => PushRegister(cpu, REG16.HL),
-        [0x00F5] = (cpu, _) => PushRegister(cpu, REG16.AF),
-        #endregion
-
-        #region Interrupt
-        [0x00F3] = (_, bus) => SetInterruptFlag(bus, false),
-        [0x00FB] = (_, bus) => SetInterruptFlag(bus, true),
-        [0x0076] = (_, _) => Status.Halt,
-        #endregion
-
-        // TODO: Simplify declaration to not include _all_ lines
-        #region Load Operations
-        [0x0040] = (cpu, _) => MovRegister(REG8.B, REG8.B, cpu),
-        [0x0041] = (cpu, _) => MovRegister(REG8.B, REG8.C, cpu),
-        [0x0042] = (cpu, _) => MovRegister(REG8.B, REG8.D, cpu),
-        [0x0043] = (cpu, _) => MovRegister(REG8.B, REG8.E, cpu),
-        [0x0044] = (cpu, _) => MovRegister(REG8.B, REG8.H, cpu),
-        [0x0045] = (cpu, _) => MovRegister(REG8.B, REG8.L, cpu),
-        [0x0046] = (cpu, _) => MovRegister(REG8.B, REG8.HL, cpu),
-        [0x0047] = (cpu, _) => MovRegister(REG8.B, REG8.A, cpu),
-        [0x0048] = (cpu, _) => MovRegister(REG8.C, REG8.B, cpu),
-        [0x0049] = (cpu, _) => MovRegister(REG8.C, REG8.C, cpu),
-        [0x004A] = (cpu, _) => MovRegister(REG8.C, REG8.D, cpu),
-        [0x004B] = (cpu, _) => MovRegister(REG8.C, REG8.E, cpu),
-        [0x004C] = (cpu, _) => MovRegister(REG8.C, REG8.H, cpu),
-        [0x004D] = (cpu, _) => MovRegister(REG8.C, REG8.L, cpu),
-        [0x004E] = (cpu, _) => MovRegister(REG8.C, REG8.HL, cpu),
-        [0x004F] = (cpu, _) => MovRegister(REG8.C, REG8.A, cpu),
-        [0x0050] = (cpu, _) => MovRegister(REG8.D, REG8.B, cpu),
-        [0x0051] = (cpu, _) => MovRegister(REG8.D, REG8.C, cpu),
-        [0x0052] = (cpu, _) => MovRegister(REG8.D, REG8.D, cpu),
-        [0x0053] = (cpu, _) => MovRegister(REG8.D, REG8.E, cpu),
-        [0x0054] = (cpu, _) => MovRegister(REG8.D, REG8.H, cpu),
-        [0x0055] = (cpu, _) => MovRegister(REG8.D, REG8.L, cpu),
-        [0x0056] = (cpu, _) => MovRegister(REG8.D, REG8.HL, cpu),
-        [0x0057] = (cpu, _) => MovRegister(REG8.D, REG8.A, cpu),
-        [0x0058] = (cpu, _) => MovRegister(REG8.E, REG8.B, cpu),
-        [0x0059] = (cpu, _) => MovRegister(REG8.E, REG8.C, cpu),
-        [0x005A] = (cpu, _) => MovRegister(REG8.E, REG8.D, cpu),
-        [0x005B] = (cpu, _) => MovRegister(REG8.E, REG8.E, cpu),
-        [0x005C] = (cpu, _) => MovRegister(REG8.E, REG8.H, cpu),
-        [0x005D] = (cpu, _) => MovRegister(REG8.E, REG8.L, cpu),
-        [0x005E] = (cpu, _) => MovRegister(REG8.E, REG8.HL, cpu),
-        [0x005F] = (cpu, _) => MovRegister(REG8.E, REG8.A, cpu),
-        [0x0060] = (cpu, _) => MovRegister(REG8.H, REG8.B, cpu),
-        [0x0061] = (cpu, _) => MovRegister(REG8.H, REG8.C, cpu),
-        [0x0062] = (cpu, _) => MovRegister(REG8.H, REG8.D, cpu),
-        [0x0063] = (cpu, _) => MovRegister(REG8.H, REG8.E, cpu),
-        [0x0064] = (cpu, _) => MovRegister(REG8.H, REG8.H, cpu),
-        [0x0065] = (cpu, _) => MovRegister(REG8.H, REG8.L, cpu),
-        [0x0066] = (cpu, _) => MovRegister(REG8.H, REG8.HL, cpu),
-        [0x0067] = (cpu, _) => MovRegister(REG8.H, REG8.A, cpu),
-        [0x0068] = (cpu, _) => MovRegister(REG8.L, REG8.B, cpu),
-        [0x0069] = (cpu, _) => MovRegister(REG8.L, REG8.C, cpu),
-        [0x006A] = (cpu, _) => MovRegister(REG8.L, REG8.D, cpu),
-        [0x006B] = (cpu, _) => MovRegister(REG8.L, REG8.E, cpu),
-        [0x006C] = (cpu, _) => MovRegister(REG8.L, REG8.H, cpu),
-        [0x006D] = (cpu, _) => MovRegister(REG8.L, REG8.L, cpu),
-        [0x006E] = (cpu, _) => MovRegister(REG8.L, REG8.HL, cpu),
-        [0x006F] = (cpu, _) => MovRegister(REG8.L, REG8.A, cpu),
-        [0x0070] = (cpu, _) => MovRegister(REG8.HL, REG8.B, cpu),
-        [0x0071] = (cpu, _) => MovRegister(REG8.HL, REG8.C, cpu),
-        [0x0072] = (cpu, _) => MovRegister(REG8.HL, REG8.D, cpu),
-        [0x0073] = (cpu, _) => MovRegister(REG8.HL, REG8.E, cpu),
-        [0x0074] = (cpu, _) => MovRegister(REG8.HL, REG8.H, cpu),
-        [0x0075] = (cpu, _) => MovRegister(REG8.HL, REG8.L, cpu),
-        [0x0077] = (cpu, _) => MovRegister(REG8.HL, REG8.A, cpu),
-        [0x0078] = (cpu, _) => MovRegister(REG8.A, REG8.B, cpu),
-        [0x0079] = (cpu, _) => MovRegister(REG8.A, REG8.C, cpu),
-        [0x007A] = (cpu, _) => MovRegister(REG8.A, REG8.D, cpu),
-        [0x007B] = (cpu, _) => MovRegister(REG8.A, REG8.E, cpu),
-        [0x007C] = (cpu, _) => MovRegister(REG8.A, REG8.H, cpu),
-        [0x007D] = (cpu, _) => MovRegister(REG8.A, REG8.L, cpu),
-        [0x007E] = (cpu, _) => MovRegister(REG8.A, REG8.HL, cpu),
-        [0x007F] = (cpu, _) => MovRegister(REG8.A, REG8.A, cpu),
-        [0x0002] = (cpu, bus) => StoreRegister(REG16.BC, cpu, bus),
-        [0x0012] = (cpu, bus) => StoreRegister(REG16.DE, cpu, bus),
-        [0x000A] = (cpu, bus) => LoadRegister(REG16.BC, cpu, bus),
-        [0x001A] = (cpu, bus) => LoadRegister(REG16.DE, cpu, bus),
-
-        [0x0022] = (cpu, bus) => StoreHLInc(cpu, bus),
-        [0x0032] = (cpu, bus) => StoreHLDec(cpu, bus),
-        [0x002A] = (cpu, bus) => LoadHLInc(cpu, bus),
-        [0x003A] = (cpu, bus) => LoadHLDec(cpu, bus),
-        #endregion
-    };
     #endregion
-
-    public static Status CPUCrash(CPU _, IBus __) => Status.InvalidInstr;
 
     #region JumpFuncs
 
@@ -758,6 +608,27 @@ internal static class Instructions
         cpu.WriteRegister16(register, cpu.Pop());
         return Status.Continue;
     }
+
+    public static Status StoreSPIndirect(CPU cpu, IBus bus)
+    {
+        ushort address = cpu.Fetch16();
+        bus.Write(address, (byte)(cpu.SP & 0xFF));
+        bus.Write((ushort)(address + 1), (byte)(cpu.SP >> 8));
+        return Status.Continue;
+    }
+
+    public static Status MoveSPHL(CPU cpu)
+    {
+        cpu.SP = cpu.HL;
+        return Status.Continue;
+    }
+
+    public static Status MoveRegisterSPOffset(REG16 dest, CPU cpu)
+    {
+        sbyte offset = (sbyte)cpu.Fetch8();
+        cpu.WriteRegister16(dest, (ushort)(cpu.SP + offset));
+        return Status.Continue;
+    }
     #endregion
 
     #region Interrupt
@@ -774,44 +645,505 @@ internal static class Instructions
         cpu.WriteRegister8(dest, cpu.ReadRegister8(src));
         return Status.Continue;
     }
+
+    public static Status MovRegister16(REG16 dest, REG16 src, CPU cpu)
+    {
+        cpu.WriteRegister16(dest, cpu.ReadRegister16(src));
+        return Status.Continue;
+    }
+
+    public static Status LoadRegisterImmediate16(REG16 dest, CPU cpu)
+    {
+        cpu.WriteRegister16(dest, cpu.Fetch16());
+        return Status.Continue;
+    }
     
-    public static Status StoreRegister(REG16 dest, CPU cpu, IBus bus)
+    public static Status LoadRegisterA(REG16 dest, CPU cpu, IBus bus)
     {
         bus.Write(cpu.ReadRegister16(dest), cpu.A);
         return Status.Continue;
     }
 
-    public static Status LoadRegister(REG16 src, CPU cpu, IBus bus)
+    public static Status StoreRegisterA(REG16 src, CPU cpu, IBus bus)
     {
         cpu.A =  bus.Read(cpu.ReadRegister16(src));
         return Status.Continue;
     }
 
-    public static Status LoadHLInc(CPU cpu, IBus bus)
+    public static Status LoadAIncHL(CPU cpu, IBus bus)
     {
         cpu.A = bus.Read(cpu.HL);
         cpu.HL += 1;
         return Status.Continue;
     }
 
-    public static Status LoadHLDec(CPU cpu, IBus bus)
+    public static Status LoadADecHL(CPU cpu, IBus bus)
     {
         cpu.A = bus.Read(cpu.HL);
         cpu.HL -= 1;
         return Status.Continue;
     }
 
-    public static Status StoreHLInc(CPU cpu, IBus bus)
+    public static Status StoreAIncHL(CPU cpu, IBus bus)
     {
         bus.Write(cpu.HL, cpu.A);
         cpu.HL += 1;
         return Status.Continue;
     }
 
-    public static Status StoreHLDec(CPU cpu, IBus bus)
+    public static Status StoreADecHL(CPU cpu, IBus bus)
     {
         bus.Write(cpu.HL, cpu.A);
         cpu.HL -= 1;
+        return Status.Continue;
+    }
+
+    public static Status LoadImmediate(REG8 dest, CPU cpu)
+    {
+        cpu.WriteRegister8(dest, cpu.Fetch8());
+        return Status.Continue;
+    }
+
+    public static Status LoadAIndirect(CPU cpu, IBus bus)
+    {
+        cpu.A = bus.Read(cpu.Fetch16());
+        return Status.Continue;
+    }
+
+    public static Status StoreAIndirect(CPU cpu, IBus bus)
+    {
+        bus.Write(cpu.Fetch16(), cpu.A);
+        return Status.Continue;
+    }
+
+    public static Status LoadFFPageImmediateA(CPU cpu, IBus bus)
+    {
+        cpu.A = bus.Read((ushort)(0xFF00 | cpu.Fetch8()));
+        return Status.Continue;
+    }
+
+    public static Status StoreFFPageImmediateA(CPU cpu, IBus bus)
+    {
+        bus.Write((ushort)(0xFF00 | cpu.Fetch8()), cpu.A);
+        return Status.Continue;
+    }
+
+    public static Status LoadFFPageIndirectC(CPU cpu, IBus bus)
+    {
+        cpu.A = bus.Read((ushort)(0xFF00 | cpu.C));
+        return Status.Continue;
+    }
+
+    public static Status StoreFFPageIndirectC(CPU cpu, IBus bus)
+    {
+        bus.Write((ushort)(0xFF00 | cpu.C), cpu.A);
+        return Status.Continue;
+    }
+    #endregion
+
+    #region Math
+    public static Status Inc8(REG8 dest, CPU cpu)
+    {
+        byte previous = cpu.ReadRegister8(dest);
+        int result = previous + 1;
+
+        cpu.FlagZ = (result & 0xFF) is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result & 0x0F) is 0;
+
+        cpu.WriteRegister8(dest, (byte)result);
+
+        return Status.Continue;
+    }
+
+    public static Status Inc16(REG16 dest, CPU cpu)
+    {
+        ushort previous = cpu.ReadRegister16(dest);
+        int result = previous + 1;
+        cpu.WriteRegister16(dest, (ushort)result);
+        return Status.Continue;
+    }
+
+    public static Status Dec8(REG8 dest, CPU cpu)
+    {
+        byte previous = cpu.ReadRegister8(dest);
+        int result = previous - 1;
+
+        cpu.FlagZ = (result & 0xFF) is 0;
+        cpu.FlagN = true;
+        cpu.FlagH = (previous & 0x0F) is 0;
+
+        return Status.Continue;
+    }
+
+    public static Status Dec16(REG16 dest, CPU cpu)
+    {
+        ushort previous = cpu.ReadRegister16(dest);
+        int result = previous - 1;
+        cpu.WriteRegister16(dest, (ushort)result);
+        return Status.Continue;
+    }
+
+    public static Status AddReg8(REG8 src, CPU cpu)
+    {
+        ushort prevDest = cpu.A;
+        ushort prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest + prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status AddImmediate(CPU cpu)
+    {
+        ushort prevDest = cpu.A;
+        ushort prevSrc = cpu.Fetch8();
+
+        int result = prevDest + prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status AddCarryReg8(REG8 src, CPU cpu)
+    {
+        ushort prevDest = cpu.A;
+        ushort prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest + prevSrc + (cpu.FlagC ? 1 : 0);
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        // TODO: Actually check for half carry
+        cpu.FlagH = (result >> 4) is 1; 
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status AddCarryImmediate(CPU cpu)
+    {
+        ushort prevDest = cpu.A;
+        ushort prevSrc = cpu.Fetch8();
+
+        int result = prevDest + prevSrc + (cpu.FlagC ? 1 : 0);
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        // TODO: Actually check for half carry
+        cpu.FlagH = (result >> 4) is 1;
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status AddReg16(REG16 dest, REG16 src, CPU cpu)
+    {
+        ushort prevDest = cpu.ReadRegister16(dest);
+        ushort prevSrc = cpu.ReadRegister16(src);
+
+        int result = prevDest + prevSrc;
+
+        cpu.FlagN = false;
+        // TODO: Actually check for half carry
+        // cpu.FlagH;
+        cpu.FlagC = (result >> 16) is 1;
+
+        cpu.WriteRegister16(src, (ushort)result);
+        return Status.Continue;
+    }
+
+    public static Status SubReg8(REG8 src, CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest - prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status SubImmediate(CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.Fetch8();
+
+        int result = prevDest - prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status SubCarryReg8(REG8 src, CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest - prevSrc - (cpu.FlagC ? 1 : 0);
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status SubCarryImmediate(CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.Fetch8();
+
+        int result = prevDest - prevSrc - (cpu.FlagC ? 1 : 0);
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = (result >> 4) is 1; // TODO: Actually check for half carry
+        cpu.FlagC = (result >> 8) is 1;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status ANDReg8(REG8 src, CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest & prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = true;
+        cpu.FlagC = false;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status ANDImmediate(CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.Fetch8();
+
+        int result = prevDest & prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = true;
+        cpu.FlagC = false;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status ORReg8(REG8 src, CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest | prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = false;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status ORImmediate(CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.Fetch8();
+
+        int result = prevDest | prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = false;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status XORReg8(REG8 src, CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.ReadRegister8(src);
+
+        int result = prevDest ^ prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = false;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status XORImmediate(CPU cpu)
+    {
+        byte prevDest = cpu.A;
+        byte prevSrc = cpu.Fetch8();
+
+        int result = prevDest ^ prevSrc;
+
+        cpu.FlagZ = (byte)result is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = false;
+
+        cpu.A = (byte)result;
+        return Status.Continue;
+    }
+
+    public static Status CompareReg8(REG8 src, CPU cpu)
+    {
+        byte srcVal = cpu.ReadRegister8(src);
+
+        int result = cpu.A - srcVal;
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = true;
+        cpu.FlagH = (cpu.A & 0x0F) is 0;
+        cpu.FlagC = cpu.A < srcVal;
+
+        return Status.Continue;
+    }
+
+    public static Status CompareImmediate(CPU cpu)
+    {
+        byte srcVal = cpu.Fetch8();
+
+        int result = cpu.A - srcVal;
+
+        cpu.FlagZ = result is 0;
+        cpu.FlagN = true;
+        cpu.FlagH = (cpu.A & 0x0F) is 0;
+        cpu.FlagC = cpu.A < srcVal;
+
+        return Status.Continue;
+    }
+    #endregion
+
+    #region Miscellaneous
+    public static Status ComplimentCarryFlag(CPU cpu)
+    {
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = !cpu.FlagC;
+        return Status.Continue;
+    }
+
+    public static Status SetCarryFlag(CPU cpu)
+    {
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = true;
+        return Status.Continue;
+    }
+
+    public static Status ComplimentRegisterA(CPU cpu)
+    {
+        cpu.FlagN = true;
+        cpu.FlagH = true;
+        cpu.A ^= 0xFF;
+        return Status.Continue;
+    }
+
+    // TODO: Implement
+    public static Status DecimalAdjustRegisterA(CPU cpu)
+    {
+        cpu.FlagH = false;
+        return Status.Continue;
+    }
+    
+    public static Status RotateLeftA(CPU cpu)
+    {
+        byte prev = cpu.A;
+        byte prevCarry = (byte)(cpu.FlagC ? 1 : 0);
+
+        cpu.A <<= 1;
+        cpu.A |= prevCarry;
+
+        cpu.FlagZ = cpu.A is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev >> 7) is 1;
+
+        return Status.Continue;
+    }
+
+    public static Status RotateLeftCarryA(CPU cpu)
+    {
+        byte prev = cpu.A;
+
+        cpu.A <<= 1;
+        cpu.A |= (byte)(prev >> 7);
+
+        cpu.FlagZ = cpu.A is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev >> 7) is 1;
+
+        return Status.Continue;
+    }
+
+    public static Status RotateRightA(CPU cpu)
+    {
+        byte prev = (byte)(cpu.FlagC ? 1 : 0);
+
+        cpu.A >>= 1;
+        cpu.A |= (byte)(prev << 7);
+
+        cpu.FlagZ = cpu.A is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev >> 7) is 1;
+
+        return Status.Continue;
+    }
+
+    public static Status RotateRightCarryA(CPU cpu)
+    {
+        byte prev = cpu.A;
+
+        cpu.A >>= 1;
+        cpu.A |= (byte)(prev & 0x80);
+
+        cpu.FlagZ = cpu.A is 0;
+        cpu.FlagN = false;
+        cpu.FlagH = false;
+        cpu.FlagC = (prev >> 7) is 1;
         return Status.Continue;
     }
     #endregion

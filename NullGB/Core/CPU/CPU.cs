@@ -159,9 +159,9 @@ internal partial class CPU
     public void Start()
     {
         Restart();
+        // TODO: Move main loop out of CPU
         while (true)
         {
-            // TODO: Make step return status
             Step();
         }
     }
