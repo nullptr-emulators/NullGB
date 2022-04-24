@@ -1094,7 +1094,7 @@ internal static class Instructions
 
     public static Status DecimalAdjustRegisterA(CPU cpu)
     {
-        byte value = cpu.A;
+        ushort value = cpu.A;
 
         if (cpu.FlagN)
         {
@@ -1109,23 +1109,25 @@ internal static class Instructions
         }
         else
         {
-            if (cpu.FlagH || (value & 0x0f) > 0x09)
-            {
-                value += 0x6;
-            }
             if (cpu.FlagC || value > 0x99)
             {
                 value += 0x60;
                 cpu.FlagC = true;
             }
+            if (cpu.FlagH || (value & 0x0F) > 0x09)
+            {
+                value += 0x6;
+            }
         }
 
         value &= 0xFF;
 
+
         cpu.FlagZ = value == 0;
         cpu.FlagH = false;
 
-        cpu.A = value;
+        cpu.A = (byte)value;
+
         return Status.Continue;
     }
     

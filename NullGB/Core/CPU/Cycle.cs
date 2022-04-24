@@ -20,7 +20,7 @@ namespace NullGB.Core.CPU
             {
                 bytes += $" {MemoryBus.Read(PC + i):X2}";
             }
-            Console.WriteLine($"{PC - 1:X4}:  {bytes,-15}A:{A:x2} F:{F:x2} B:{B:x2} C:{C:x2} D:{D:x2} E:{E:x2} H:{H:x2} L:{L:x2} SP:{SP:x4}");
+            Console.WriteLine($"{PC - 1:X4}:  {bytes,-10}A:{A:x2} F:{F:x2} B:{B:x2} C:{C:x2} D:{D:x2} E:{E:x2} H:{H:x2} L:{L:x2} SP:{SP:x4}");
 #endif
             return Execute(opcode);
         }
