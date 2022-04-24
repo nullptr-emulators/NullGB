@@ -932,7 +932,7 @@ internal static class Instructions
         int result = prevDest - prevSrc - carry;
 
         cpu.FlagZ = (byte)result is 0;
-        cpu.FlagN = false;
+        cpu.FlagN = true;
         cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
