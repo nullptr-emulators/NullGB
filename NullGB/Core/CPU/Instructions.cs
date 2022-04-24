@@ -1092,10 +1092,40 @@ internal static class Instructions
         return Status.Continue;
     }
 
-    // TODO: Implement
     public static Status DecimalAdjustRegisterA(CPU cpu)
     {
+        byte value = cpu.A;
+
+        if (cpu.FlagN)
+        {
+            if (cpu.FlagH)
+            {
+                value -= 0x6;
+            }
+            if (cpu.FlagC)
+            {
+                value -= 0x60;
+            }
+        }
+        else
+        {
+            if (cpu.FlagH || (value & 0x0f) > 0x09)
+            {
+                value += 0x6;
+            }
+            if (cpu.FlagC || value > 0x99)
+            {
+                value += 0x60;
+                cpu.FlagC = true;
+            }
+        }
+
+        value &= 0xFF;
+
+        cpu.FlagZ = value == 0;
         cpu.FlagH = false;
+
+        cpu.A = value;
         return Status.Continue;
     }
     
