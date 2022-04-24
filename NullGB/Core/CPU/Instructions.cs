@@ -624,8 +624,16 @@ internal static class Instructions
 
     public static Status MoveRegisterSPOffset(REG16 dest, CPU cpu)
     {
+        ushort prevDest = cpu.SP;
         sbyte offset = (sbyte)cpu.Fetch8();
-        cpu.WriteRegister16(dest, (ushort)(cpu.SP + offset));
+        ushort result = (ushort)(prevDest + offset);
+
+        cpu.FlagZ = false;
+        cpu.FlagN = false;
+        cpu.FlagH = (((result ^ prevDest ^ offset) >> 4) & 1) is 1;
+        cpu.FlagC = (((result ^ prevDest ^ offset) >> 8) & 1) is 1;
+
+        cpu.WriteRegister16(dest, result);
         return Status.Continue;
     }
     #endregion
@@ -794,7 +802,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -810,7 +818,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -827,7 +835,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF) + carry) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -844,7 +852,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF) + carry) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -859,10 +867,10 @@ internal static class Instructions
         int result = prevDest + prevSrc;
 
         cpu.FlagN = false;
-        cpu.FlagH = (((prevDest & 0xF) + (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 12) & 1) is 1;
         cpu.FlagC = (result >> 16) is not 0;
 
-        cpu.WriteRegister16(src, (ushort)result);
+        cpu.WriteRegister16(dest, (ushort)result);
         return Status.Continue;
     }
 
@@ -875,7 +883,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -891,7 +899,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -908,7 +916,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF) - carry) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -925,7 +933,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = false;
-        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF) - carry) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         cpu.A = (byte)result;
@@ -1037,7 +1045,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (((prevDest & 0xF) - (prevSrc & 0xF)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         return Status.Continue;
@@ -1052,7 +1060,7 @@ internal static class Instructions
 
         cpu.FlagZ = (byte)result is 0;
         cpu.FlagN = true;
-        cpu.FlagH = (((prevDest & 0xf) - (prevSrc & 0xf)) & 0x10) is 0x10;
+        cpu.FlagH = (((result ^ prevDest ^ prevSrc) >> 4) & 1) is 1;
         cpu.FlagC = (result >> 8) is not 0;
 
         return Status.Continue;
